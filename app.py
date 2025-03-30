@@ -135,6 +135,32 @@ insert_quiz_data()
 
 #Your code goes here team
 
+# User registration
+def register_user():
+    while True:
+        username = input("Create username (min 4 chars): ")
+        if len(username) < 4:
+            print("Username too short!")
+            continue
+
+        password = input("Create password (min 6 chars): ")
+        if len(password) < 6:
+            print("Password too weak!")
+            continue
+
+        try:
+            cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+            (username, hash_password(password))
+        )  # Closing parenthesis for cursor.execute
+            db.commit()  # Ensure this is outside the execute method
+            print("Registration successful!")
+            return
+        except mysql.connector.IntegrityError:
+            print("Username already exists!")
+
+
+
 # Main application flow - (Sydney Erik Wamalwa)
 def main_menu():
     current_user = None
