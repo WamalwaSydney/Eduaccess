@@ -132,3 +132,72 @@ def insert_quiz_data():
 # Initialize sample data
 insert_sample_data()
 insert_quiz_data()
+
+#Your code goes here team
+
+# Main application flow - (Sydney Erik Wamalwa)
+def main_menu():
+    current_user = None
+    while True:
+        print("\nEDUACCESS LEARNING PORTAL")
+        print("1. Register")
+        print("2. Login")
+        print("3. Browse Courses")
+        print("4. Start Learning")
+        print("5. View Progress")
+        print("6. Exit")
+
+        choice = input("Select option: ")
+
+        if choice == "1":
+            register_user()
+        elif choice == "2":
+            current_user = login()
+        elif choice == "3":
+            show_courses()
+        elif choice == "4":
+            if not current_user:
+                print("Please login first!")
+                continue
+
+            show_courses()
+            subject = input("Choose subject: ")
+            cursor.execute("""
+            SELECT lesson FROM courses
+            WHERE subject = %s
+            ORDER BY lesson
+            """, (subject,))
+
+            lessons = cursor.fetchall()
+            if not lessons:
+                print("Invalid subject selection!")
+                continue
+
+            print(f"\nAvailable Lessons in {subject}:")
+            for i, (lesson,) in enumerate(lessons, 1):
+                print(f"{i}. {lesson}")
+
+            try:
+                lesson_choice = int(input("Select lesson number: ")) - 1
+                selected_lesson = lessons[lesson_choice][0]
+            except:
+                print("Invalid lesson selection!")
+                continue
+
+            if display_lesson_content(selected_lesson):
+                input("\nPress Enter to start quiz...")
+                score = take_quiz(selected_lesson)
+                update_progress(current_user, selected_lesson, score)
+        elif choice == "5":
+            if current_user:
+                show_progress(current_user)
+            else:
+                print("Please login first!")
+        elif choice == "6":
+            print("Thank you for learning with EduAccess!")
+            break
+        else:
+            print("Invalid selection!")
+
+if __name__ == "__main__":
+    main_menu()
