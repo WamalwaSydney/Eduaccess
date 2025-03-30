@@ -1,23 +1,134 @@
-class User:
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-        
-users = []
+import mysql.connector
+import hashlib
 
-def register_user():
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    users.append(User(username, password))
-    print("Registration successful!")
+# Database connection and setup - (Sydney Erik Wamalwa)
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password=""
+)
+cursor = db.cursor()
 
-def login_user():
-    username = input("Enter username: ")
-    password = input("Enter password: ")
+# Create Database and Tables with enhanced structure
+cursor.execute("CREATE DATABASE IF NOT EXISTS eduaccess")
+cursor.execute("USE eduaccess")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subject VARCHAR(255) NOT NULL,
+    lesson VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    UNIQUE(subject, lesson)
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS quizzes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lesson VARCHAR(255) NOT NULL,
+    question TEXT NOT NULL,
+    answer VARCHAR(255) NOT NULL
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS progress (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    lesson VARCHAR(255) NOT NULL,
+    score INT NOT NULL,
+    FOREIGN KEY (username) REFERENCES users(username)
+)
+""")
+db.commit()
+
+# Enhanced sample data with comprehensive content - (Sydney Erik Wamalwa)
+def insert_sample_data():
+    courses = [
+        ("Mathematics", "Algebra Basics", 
+        """Algebra Fundamentals:
+1. Variables and Constants: Represent unknown values with letters (e.g., x, y)
+2. Basic Equations: Solve 2x + 5 = 15 → x = 5
+3. Linear Equations: Graph y = 2x + 3
+4. Polynomials: (x + 2)(x + 3) = x² + 5x + 6"""),
+
+        ("Mathematics", "Geometry Essentials",
+        """Geometry Basics:
+1. Angles: Right angle = 90°, Straight angle = 180°
+2. Pythagorean Theorem: a² + b² = c²
+3. Area Calculations:
+   - Square: side²
+   - Circle: πr²
+4. Volume: Cube = side³"""),
+
+        ("Science", "Physics Principles",
+        """Core Physics Concepts:
+1. Newton's Laws:
+   - 1st Law: Inertia
+   - 2nd Law: F = ma
+   - 3rd Law: Action-Reaction
+2. Energy Types: Kinetic, Potential
+3. Ohm's Law: V = IR"""),
+
+        ("Science", "Chemistry Basics",
+        """Introduction to Chemistry:
+1. Atoms: Proton, Neutron, Electron
+2. Periodic Table Elements:
+   - H (Hydrogen)
+   - O (Oxygen)
+   - C (Carbon)
+3. Chemical Equations: 2H₂ + O₂ → 2H₂O"""),
+
+        ("History", "World War II Overview",
+        """WWII Key Points:
+1. Timeline: 1939-1945
+2. Major Powers:
+   - Allies: USA, UK, USSR
+   - Axis: Germany, Japan, Italy
+3. Significant Events:
+   - D-Day (1944)
+   - Atomic Bombings (1945)""")
+    ]
+
+    for subject, lesson, content in courses:
+        cursor.execute("""
+        INSERT IGNORE INTO courses (subject, lesson, content)
+        VALUES (%s, %s, %s)
+        """, (subject, lesson, content))
     
-    for user in users:
-        if user.username == username and user.password == password:
-            print("Login successful!")
-            return True
-    print("Invalid username or password.")
-    return False
+    db.commit()
+
+def insert_quiz_data():
+    quizzes = [
+        ("Algebra Basics", "Solve for x: 3x + 5 = 20", "5"),
+        ("Algebra Basics", "Expand (x + 4)(x + 2)", "x²+6x+8"),
+        ("Geometry Essentials", "Calculate area of circle with radius 3 (π=3.14)", "28.26"),
+        ("Geometry Essentials", "Right triangle sides: 3cm and 4cm. Hypotenuse?", "5"),
+        ("Physics Principles", "Calculate force (F=ma): m=10kg, a=2m/s²", "20"),
+        ("Physics Principles", "Voltage with I=2A and R=5Ω (V=IR)", "10"),
+        ("Chemistry Basics", "Number of atoms in H₂O molecule", "3"),
+        ("Chemistry Basics", "Balance: _H₂ + O₂ → _H₂O", "2H2+O2→2H2O"),
+        ("World War II Overview", "WWII start year", "1939"),
+        ("World War II Overview", "Country that dropped atomic bombs in 1945", "USA")
+    ]
+
+    for lesson, question, answer in quizzes:
+        cursor.execute("""
+        INSERT IGNORE INTO quizzes (lesson, question, answer)
+        VALUES (%s, %s, %s)
+        """, (lesson, question, answer))
+    
+    db.commit()
+
+# Initialize sample data
+insert_sample_data()
+insert_quiz_data()
