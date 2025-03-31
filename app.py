@@ -137,7 +137,64 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 #Your code goes here team
-#lumumba
+# User authentication - (Fadhili Beracah Lumumba)
+def login():
+    for attempt in range(3):
+        username = input("Username: ")
+        password = input("Password: ")
+        cursor.execute("""
+        SELECT * FROM users
+        WHERE username = %s AND password_hash = %s
+        """, (username, hash_password(password)))
+
+        if cursor.fetchone():
+            print(f"Welcome back, {username}!")
+            return username
+        print(f"Invalid credentials ({2-attempt} attempts remaining)")
+    return None
+
+# Course interaction system
+def show_courses():
+    cursor.execute("SELECT DISTINCT subject FROM courses")
+    print("\nAvailable Subjects:")
+    for (subject,) in cursor:
+        print(f"- {subject}")
+
+def display_lesson_content(lesson):
+    cursor.execute("SELECT content FROM courses WHERE lesson = %s", (lesson,))
+    result = cursor.fetchone()
+    if result:
+        print("\n" + "="*50)
+        print(f"LESSON CONTENT: {lesson}")
+        print("="*50)
+        print(result[0])
+        print("="*50 + "\n")
+        return True
+    print("Lesson content not found!")
+    return False
+
+def take_quiz(lesson):
+    cursor.execute("SELECT question, answer FROM quizzes WHERE lesson = %s", (lesson,))
+    questions = cursor.fetchall()
+
+    if not questions:
+        print("No quiz available for this lesson")
+        return 0
+
+    score = 0
+    print(f"\n{lesson} QUIZ ({len(questions)} questions)")
+    for i, (question, correct_answer) in enumerate(questions, 1):
+        user_answer = input(f"\nQ{i}: {question}\nYour answer: ").strip()
+        if user_answer.lower() == correct_answer.lower():
+            score += 1
+            print("Correct!")
+        else:
+            print(f"Wrong! Correct answer: {correct_answer}")
+
+    final_score = int((score / len(questions)) * 100)
+    print(f"\nQuiz Complete! Score: {final_score}%")
+    return final_score
+
 # Progress tracking - (fadhili lumumba Nzabinesha Merci)
 def update_progress(username, lesson, score):
     cursor.execute("""
@@ -153,7 +210,6 @@ def show_progress(username):
     WHERE username = %s
     ORDER BY lesson
     """, (username,))
-
     print("\nLearning Progress:")
     for lesson, score in cursor:
         print(f"- {lesson}: {'★' * (score//20)}{'☆' * (5 - score//20)} ({score}%)")
