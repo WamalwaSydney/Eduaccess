@@ -1,4 +1,4 @@
-import mysql.connector
+uimport mysql.connector
 import hashlib
 
 # Database connection and setup - (Sydney Erik Wamalwa)
@@ -132,8 +132,31 @@ def insert_quiz_data():
 # Initialize sample data
 insert_sample_data()
 insert_quiz_data()
+#Security functions - (Nzabinesha Merci)
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 #Your code goes here team
+#lumumba
+# Progress tracking - (fadhili lumumba Nzabinesha Merci)
+def update_progress(username, lesson, score):
+    cursor.execute("""
+    INSERT INTO progress (username, lesson, score)
+    VALUES (%s, %s, %s)
+    ON DUPLICATE KEY UPDATE score = GREATEST(score, %s)
+    """, (username, lesson, score, score))
+    db.commit()
+
+def show_progress(username):
+    cursor.execute("""
+    SELECT lesson, score FROM progress
+    WHERE username = %s
+    ORDER BY lesson
+    """, (username,))
+
+    print("\nLearning Progress:")
+    for lesson, score in cursor:
+        print(f"- {lesson}: {'★' * (score//20)}{'☆' * (5 - score//20)} ({score}%)")
 
 # User registration
 def register_user():
